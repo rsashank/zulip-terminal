@@ -236,6 +236,15 @@ class MessageView(urwid.ListBox):
             message = self.focus.original_widget.message
             self.model.toggle_message_star_status(message)
 
+        elif is_command_key("REACTION_AGREEMENT", key) and self.focus is not None:
+            message = self.focus.original_widget.message
+            message_reactions = message["reactions"]
+            if len(message_reactions) > 0:
+                for reaction in message_reactions:
+                    emoji = reaction["emoji_name"]
+                    self.model.toggle_message_reaction(message, emoji)
+                    break
+
         key = super().keypress(size, key)
         return key
 
@@ -584,9 +593,20 @@ class MiddleColumnView(urwid.Frame):
 
         elif is_command_key("NEXT_UNREAD_TOPIC", key):
             # narrow to next unread topic
-            stream_topic = self.model.get_next_unread_topic()
-            if stream_topic is None:
+            focus = self.view.message_view.focus
+            narrow = self.model.narrow
+            if focus:
+                current_msg_id = focus.original_widget.message["id"]
+                stream_topic = self.model.next_unread_topic_from_message_id(
+                    current_msg_id
+                )
+                if stream_topic is None:
+                    return key
+            elif narrow[0][0] == "stream" and narrow[1][0] == "topic":
+                stream_topic = self.model.next_unread_topic_from_message_id(None)
+            else:
                 return key
+
             stream_id, topic = stream_topic
             self.controller.narrow_to_topic(
                 stream_name=self.model.stream_dict[stream_id]["name"],

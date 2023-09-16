@@ -619,9 +619,19 @@ class Controller:
     def deregister_client(self) -> None:
         queue_id = self.model.queue_id
         self.client.deregister(queue_id, 1.0)
+        sys.exit(0)
 
     def exit_handler(self, signum: int, frame: Any) -> None:
         self.deregister_client()
+        question = urwid.Text(
+            ("bold", "Do you want to deregister the client?"),
+            "center",
+        )
+        popup_view = PopUpConfirmationView(
+            self, question, self.deregister_client, location="center"
+        )
+        self.loop.widget = popup_view
+        self.loop.run()
         sys.exit(0)
 
     def _raise_exception(self, *args: Any, **kwargs: Any) -> Literal[True]:

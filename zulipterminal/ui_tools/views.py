@@ -1083,6 +1083,7 @@ class AboutView(PopUpView):
         theme_name: str,
         color_depth: int,
         autohide_enabled: bool,
+        exit_confirmation_enabled: bool,
         maximum_footlinks: int,
         notify_enabled: bool,
     ) -> None:
@@ -1099,6 +1100,10 @@ class AboutView(PopUpView):
                 [
                     ("Theme", theme_name),
                     ("Autohide", "enabled" if autohide_enabled else "disabled"),
+                    (
+                        "Exit confirmation",
+                        "enabled" if exit_confirmation_enabled else "disabled",
+                    ),
                     ("Maximum footlinks", str(maximum_footlinks)),
                     ("Color depth", str(color_depth)),
                     ("Notifications", "enabled" if notify_enabled else "disabled"),

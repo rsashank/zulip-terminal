@@ -70,12 +70,14 @@ class Controller:
         in_explore_mode: bool,
         autohide: bool,
         notify: bool,
+        exit_confirmation: bool,
     ) -> None:
         self.theme_name = theme_name
         self.theme = theme
         self.color_depth = color_depth
         self.in_explore_mode = in_explore_mode
         self.autohide = autohide
+        self.exit_confirmation = exit_confirmation
         self.notify_enabled = notify
         self.maximum_footlinks = maximum_footlinks
 
@@ -299,6 +301,7 @@ class Controller:
                 color_depth=self.color_depth,
                 notify_enabled=self.notify_enabled,
                 autohide_enabled=self.autohide,
+                exit_confirmation_enabled=self.exit_confirmation,
                 maximum_footlinks=self.maximum_footlinks,
             ),
             "area:help",
@@ -622,15 +625,18 @@ class Controller:
         sys.exit(0)
 
     def exit_handler(self, signum: int, frame: Any) -> None:
-        question = urwid.Text(
-            ("bold", " Please confirm that you wish to exit Zulip-Terminal "),
-            "center",
-        )
-        popup_view = PopUpConfirmationView(
-            self, question, self.deregister_client, location="center"
-        )
-        self.loop.widget = popup_view
-        self.loop.run()
+        if self.exit_confirmation:
+            question = urwid.Text(
+                ("bold", " Please confirm that you wish to exit Zulip-Terminal "),
+                "center",
+            )
+            popup_view = PopUpConfirmationView(
+                self, question, self.deregister_client, location="center"
+            )
+            self.loop.widget = popup_view
+            self.loop.run()
+        else:
+            self.deregister_client()
 
     def _raise_exception(self, *args: Any, **kwargs: Any) -> Literal[True]:
         if self._exception_info is not None:

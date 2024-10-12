@@ -65,6 +65,7 @@ class MessageBox(urwid.Pile):
         self.topic_links: Dict[str, Tuple[str, int, bool]] = dict()
         self.time_mentions: List[Tuple[str, str]] = list()
         self.last_message = last_message
+        self.widget_type: str = ""
         # if this is the first message
         if self.last_message is None:
             self.last_message = defaultdict(dict)
@@ -731,26 +732,26 @@ class MessageBox(urwid.Pile):
             )
 
         if self.message.get("submessages"):
-            widget_type = find_widget_type(self.message.get("submessages"))
+            self.widget_type = find_widget_type(self.message.get("submessages"))
 
-            if widget_type == "poll":
-                poll_question, poll_options = process_poll_widget(
+            if self.widget_type == "poll":
+                self.poll_question, self.poll_options = process_poll_widget(
                     self.message.get("submessages")
                 )
 
                 poll_widget = (
-                    f"<strong>Poll: {poll_question}</strong>"
-                    if poll_question
+                    f"<strong>Poll: {self.poll_question}</strong>"
+                    if self.poll_question
                     else "No poll question provided. Please add one via the web app."
                 )
 
-                if poll_options:
+                if self.poll_options:
                     max_votes_len = max(
                         len(str(len(option["votes"])))
-                        for option in poll_options.values()
+                        for option in self.poll_options.values()
                     )
 
-                    for option_info in poll_options.values():
+                    for option_info in self.poll_options.values():
                         padded_votes = f"{len(option_info['votes']):>{max_votes_len}}"
                         poll_widget += f"\n[ {padded_votes} ] {option_info['option']}"
                 else:
@@ -1157,4 +1158,6 @@ class MessageBox(urwid.Pile):
             self.model.controller.show_emoji_picker(self.message)
         elif is_command_key("MSG_SENDER_INFO", key):
             self.model.controller.show_msg_sender_info(self.message["sender_id"])
+        elif is_command_key("SHOW_POLL_VOTES", key) and self.widget_type == "poll":
+            self.model.controller.show_poll_vote(self.poll_question, self.poll_options)
         return key

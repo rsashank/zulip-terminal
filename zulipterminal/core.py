@@ -43,6 +43,7 @@ from zulipterminal.ui_tools.views import (
     MarkdownHelpView,
     MsgInfoView,
     NoticeView,
+    PollResultsView,
     PopUpConfirmationView,
     StreamInfoView,
     StreamMembersView,
@@ -280,6 +281,36 @@ class Controller:
             time_mentions,
         )
         self.show_pop_up(msg_info_view, "area:msg")
+
+    def show_poll_vote(
+        self,
+        poll_question: str,
+        options: Dict[str, Dict[str, Any]],
+    ) -> None:
+        options_with_names = {}
+        for option_key, option_data in options.items():
+            option_text = option_data["option"]
+            voter_ids = option_data["votes"]
+
+            voter_names = []
+            for voter_id in voter_ids:
+                user_info = self.model.get_user_info(voter_id)
+                if user_info:
+                    voter_names.append(user_info["full_name"])
+
+            options_with_names[option_key] = {
+                "option": option_text,
+                "votes": voter_names if voter_names else [],
+            }
+
+        self.show_pop_up(
+            PollResultsView(
+                self,
+                poll_question,
+                options_with_names,
+            ),
+            "area:msg",
+        )
 
     def show_emoji_picker(self, message: Message) -> None:
         all_emoji_units = [
